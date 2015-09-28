@@ -7,3 +7,23 @@
 -- these lines here.
 
 
+DROP DATABASE IF EXISTS tournament;
+
+CREATE DATABASE tournament;
+\c tournament;
+
+CREATE TABLE Matches (
+	-- id 	serial PRIMARY KEY,
+	winner	integer references Players(id),
+	loser	integer references Players(id)
+);
+
+CREATE TABLE Players (
+	id		serial PRIMARY KEY,
+	name	text,
+ 	wins	integer DEFAULT 0,
+ 	matches integer DEFAULT 0
+
+
+
+);

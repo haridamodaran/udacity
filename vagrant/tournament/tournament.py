@@ -5,6 +5,13 @@
 
 import psycopg2
 
+## Database connection
+DB = "dbname=tournament" 
+
+conn = psycopg2.connect(DB)
+cursor = conn.cursor()
+
+
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
@@ -13,15 +20,21 @@ def connect():
 
 def deleteMatches():
     """Remove all the match records from the database."""
-
+    
+    cursor.execute("DELETE FROM Matches;")
+    conn.commit();
 
 def deletePlayers():
     """Remove all the player records from the database."""
+    cursor.execute("DELETE FROM Players;")
+    conn.commit();
 
 
 def countPlayers():
     """Returns the number of players currently registered."""
-
+    cursor.execute("SELECT count(*) FROM Players;")
+    count = cursor.fetchall()[0][0]
+    return count
 
 def registerPlayer(name):
     """Adds a player to the tournament database.
@@ -32,6 +45,9 @@ def registerPlayer(name):
     Args:
       name: the player's full name (need not be unique).
     """
+
+    cursor.execute('INSERT into Players (name) VALUES (%s)  ', (name,))
+    conn.commit()
 
 
 def playerStandings():
@@ -47,7 +63,9 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-
+    cursor.execute("SELECT * FROM Players order by wins desc")
+    players =  cursor.fetchall()
+    return(players)
 
 def reportMatch(winner, loser):
     """Records the outcome of a single match between two players.
@@ -56,7 +74,27 @@ def reportMatch(winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
- 
+    cursor.execute('INSERT into Matches (winner, loser) VALUES (%s, %s)  ', (winner,loser))
+    conn.commit()
+
+    cursor.execute("SELECT matches FROM Players where id = %s" %(loser))
+    loser_matches = cursor.fetchall()[0][0]
+    updated_loser_matches = loser_matches + 1
+    cursor.execute('UPDATE Players SET matches = (%s) where id = %s ', (updated_loser_matches,loser))
+    conn.commit()
+    
+    cursor.execute("SELECT matches FROM Players where id = %s" %(winner))
+    winner_matches = cursor.fetchall()[0][0]
+    updated_winner_matches = winner_matches + 1
+    cursor.execute('UPDATE Players SET matches = (%s) where id = %s ', (updated_winner_matches,winner))
+    conn.commit()    
+
+    winner_wins = cursor.execute("SELECT wins FROM Players where id = %s" %(winner))
+    winner_wins = cursor.fetchall()[0][0]
+    updated_winner_wins = winner_wins + 1
+    cursor.execute('UPDATE Players SET wins = (%s) where id = %s ', (updated_winner_wins,winner))
+    conn.commit()
+
  
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
@@ -73,5 +111,8 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
-
+    cursor.execute("SELECT * FROM Players")
+    players = cursor.fetchall()
+    for p in players:
+        print p
 
