@@ -13,6 +13,7 @@ CREATE DATABASE tournament;
 \c tournament;
 
 CREATE TABLE Matches (
+	-- To support multiple matches in future, an id field would be required
 	-- id 	serial PRIMARY KEY,
 	winner	integer references Players(id),
 	loser	integer references Players(id)
