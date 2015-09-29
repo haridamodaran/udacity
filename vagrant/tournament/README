@@ -1,0 +1,3 @@
+To run these programs, include the line "import tournament.py" in your own code.
+
+The code can be exercised for illustrative purposes by running "python tournament_test.py".
