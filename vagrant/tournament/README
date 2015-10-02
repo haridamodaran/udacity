@@ -1,3 +1,13 @@
-To run these programs, include the line "import tournament.py" in your own code.
+This package can be used to create a database of players and matches, and to support a Swiss-style tournament.
 
-The code can be exercised for illustrative purposes by running "python tournament_test.py".
+Players are ranked according to the number of wins, and in case of ties, by the strength of the opponents they've faced. (Each player row in the Player table has a count of the number of wins by their opponents.) An additional function (testStandingsFurther) was added to the end of the tournament_test.py file in order to test this extra functionality. The name of the "reportMatch" function was changed to "registerMatch". 
+
+INSTRUCTIONS:
+
+To create database/tables:
+	1. Start psql from the directory containing tournament.sql
+	2. Once inside psql, issue the command: \i tournament.sql
+
+To test the functions in tournament.py:
+	1. From the command line, issue the command: python tournament_test.py
+			-  This will initiate a set of functions to register and remove player, report matches, and report players' standings. 

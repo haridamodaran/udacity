@@ -9,8 +9,17 @@
 
 DROP DATABASE IF EXISTS tournament;
 
-CREATE DATABASE tournament;
-\c tournament;
+CREATE DATABASE tournament ;
+
+\c tournament ;
+
+CREATE TABLE Players (
+	id		serial PRIMARY KEY,
+	name	text,
+ 	wins	integer DEFAULT 0,
+ 	matches integer DEFAULT 0,
+ 	omw		integer DEFAULT 0
+);
 
 CREATE TABLE Matches (
 	-- To support multiple matches in future, an id field would be required
@@ -19,12 +28,7 @@ CREATE TABLE Matches (
 	loser	integer references Players(id)
 );
 
-CREATE TABLE Players (
-	id		serial PRIMARY KEY,
-	name	text,
- 	wins	integer DEFAULT 0,
- 	matches integer DEFAULT 0
 
 
 
-);
+

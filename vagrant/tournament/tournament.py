@@ -7,18 +7,10 @@ import psycopg2
 # Database connection
 DB = "dbname=tournament"
 conn = psycopg2.connect(DB)
-# single cursor used by all of the functions
 cursor = conn.cursor()
-
-
-def connect():
-    """Connect to the PostgreSQL database.  Returns a database connection."""
-    return psycopg2.connect("dbname=tournament")
-
 
 def deleteMatches():
     """Remove all the match records from the database."""
-
     cursor.execute("DELETE FROM Matches;")
     conn.commit()
 
@@ -34,6 +26,11 @@ def countPlayers():
     cursor.execute("SELECT count(*) FROM Players;")
     count = cursor.fetchall()[0][0]
     return count
+
+def getPlayers():
+    cursor.execute("select * from players order by id")
+    players = cursor.fetchall()
+    return players
 
 
 def registerPlayer(name):
@@ -63,12 +60,12 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    cursor.execute("SELECT * FROM Players order by wins desc")
+    cursor.execute("SELECT * FROM Players order by wins desc, omw desc")
     players = cursor.fetchall()
     return(players)
 
 
-def reportMatch(winner, loser):
+def registerMatch(winner, loser):
     """Records the outcome of a single match between two players.
 
     Args:
@@ -96,6 +93,33 @@ def reportMatch(winner, loser):
     cursor.execute('UPDATE Players SET wins = (%s) where id = %s', (updated_winner_wins, winner))
     conn.commit()
 
+    # Before a match, update the omw of player A to reflect the previous wins of player B
+    cursor.execute("SELECT omw FROM Players where id = %s" % (winner))
+    winner_omw = cursor.fetchall()[0][0]
+    cursor.execute("SELECT omw FROM Players where id = %s" % (loser))
+    loser_omw = cursor.fetchall()[0][0]
+    cursor.execute("SELECT wins FROM Players where id = %s" % (winner))
+    winner_prev_wins = cursor.fetchall()[0][0]
+    cursor.execute("SELECT wins FROM Players where id = %s" % (loser))
+    loser_prev_wins = cursor.fetchall()[0][0]
+    updated_winner_omw = winner_omw + loser_prev_wins
+    updated_loser_omw = loser_omw + winner_prev_wins
+    cursor.execute('UPDATE Players SET omw = (%s) where id = %s', (updated_winner_omw, winner))
+    conn.commit()
+    cursor.execute('UPDATE Players SET omw = (%s) where id = %s', (updated_loser_omw, loser))
+    conn.commit()
+    
+    # After the match, increment the omw of all participants who have played against the winner
+    cursor.execute("SELECT * FROM matches WHERE winner = %s OR loser = %s" % (winner, winner))
+    players_for_omw_update = cursor.fetchall()
+    for tuple in players_for_omw_update:
+        for p in tuple:
+            if (p == winner):
+                pass
+            else:
+                cursor.execute('UPDATE Players SET omw = omw + 1 where id = %s' % (p))
+                conn.commit()
+
 
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
@@ -111,7 +135,7 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
-    cursor.execute("SELECT * FROM Players order by wins DESC")
+    cursor.execute("SELECT * FROM Players order by wins DESC, omw desc")
     players = cursor.fetchall()
     total = len(players)
     pairings = []
